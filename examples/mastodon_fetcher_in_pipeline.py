@@ -16,5 +16,5 @@ prompt_node = PromptNode(default_prompt_template= promot_template, model_name_or
 pipe = Pipeline()
 pipe.add_node(component=mastodon_fetcher, name="MastodonFetcher", inputs=["Query"])
 pipe.add_node(component=prompt_node, name="PromptNode", inputs=["MastodonFetcher"])
-result = pipe.run(query="rossng@indieweb.social")
+result = pipe.run(query="rossng@indieweb.social", params={"MastodonFetcher":{"last_k_posts": 3}})
 print_answers(result, details="minimum")
