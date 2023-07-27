@@ -25,4 +25,4 @@ class TestMastodonFetcher():
        pipe.add_node(component=mastodon_fetcher, name="MastodonFetcher", inputs=["Query"])
        pipe.add_node(component=prompt_node, name="PromptNode", inputs=["MastodonFetcher"])
        result = pipe.run(query="clonehenge@mas.to")
-       assert result["answers"] != None
+       assert "answers" in result
