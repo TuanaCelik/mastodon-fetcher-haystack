@@ -1,4 +1,6 @@
-# 🎾 MastodonFetcher Node for Haystack
+![PyPI](https://img.shields.io/pypi/v/mastodon-fetcher-haystack)
+
+# MastodonFetcher Node for Haystack
 
 This custom component for Haystack is designed to fetch the latest posts from a given Mastodon username and return the contents as a list of Haystack Documents.
 This way, it can be used as a replacement for a retriever node in a pipeline.
