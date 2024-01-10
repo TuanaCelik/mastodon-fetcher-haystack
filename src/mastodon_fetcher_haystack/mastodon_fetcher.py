@@ -1,20 +1,20 @@
 import requests
 import html2text
-from haystack.nodes import BaseComponent
-from haystack.schema import Document
-from typing import Optional
+from haystack import component
+from haystack.dataclasses import Document
+from typing import Optional, List
 
-class MastodonFetcher(BaseComponent):
-    outgoing_edges = 1
-    
+@component
+class MastodonFetcher():    
     def __init__(self, last_k_posts: Optional[int] = 10):
         self.last_k_posts = last_k_posts
-        
-    def run(self, query: str, last_k_posts: Optional[int] = None):
+    
+    @component.output_types(documents = List[Document])
+    def run(self, username: str, last_k_posts: Optional[int] = None):
         if last_k_posts is None:
             last_k_posts = self.last_k_posts
         
-        username, instance = query.split('@')
+        username, instance = username.split('@')
         
         url = f"https://{instance}/api/v1/accounts/lookup?acct={username}"
         try:
@@ -27,9 +27,5 @@ class MastodonFetcher(BaseComponent):
                 toot_stream.append(Document(content=html2text.html2text(toot["content"])))
         except Exception as e:
             toot_stream = [Document(content="Please make sure you are providing a correct, publically accesible Mastodon account")]
-        
-        output = {"documents": toot_stream}
-        return output, "output_1"
 
-    def run_batch(self):
-        pass
+        return {"documents": toot_stream}

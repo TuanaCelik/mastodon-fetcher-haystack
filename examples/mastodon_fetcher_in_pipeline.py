@@ -1,20 +1,24 @@
 import os
 from dotenv import load_dotenv
-from haystack import Pipeline
-from haystack.nodes import PromptNode, PromptTemplate, AnswerParser
-from haystack.utils import print_answers
 from mastodon_fetcher_haystack.mastodon_fetcher import MastodonFetcher
+from haystack import Pipeline
+from haystack.components.generators import OpenAIGenerator
+from haystack.components.builders import PromptBuilder
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 mastodon_fetcher = MastodonFetcher()
 
-promot_template = PromptTemplate(prompt="Given the follwing Mastodon posts stream, create a short summary of the topics the account posts about. Mastodon posts stream: {join(documents)};\n Answer:",
-                                        output_parser=AnswerParser())
-prompt_node = PromptNode(default_prompt_template= promot_template, model_name_or_path="text-davinci-003", api_key=OPENAI_API_KEY)
+prompt_template="""Given the follwing Mastodon posts stream, create a short summary of the topics the account posts about. Mastodon posts stream: {{ documents }};\n Answer:"""
+prompt_builder = PromptBuilder(template = prompt_template)
+llm = OpenAIGenerator(api_key=OPENAI_API_KEY)
 
 pipe = Pipeline()
-pipe.add_node(component=mastodon_fetcher, name="MastodonFetcher", inputs=["Query"])
-pipe.add_node(component=prompt_node, name="PromptNode", inputs=["MastodonFetcher"])
-result = pipe.run(query="rossng@indieweb.social", params={"MastodonFetcher":{"last_k_posts": 3}})
-print_answers(result, details="minimum")
+pipe.add_component("fetcher", mastodon_fetcher)
+pipe.add_component("prompt_builder", prompt_builder)
+pipe.add_component("llm", llm)
+
+pipe.connect("fetcher.documents", "prompt_builder.documents")
+pipe.connect("prompt_builder.prompt", "llm.prompt")
+result = pipe.run(data = {"fetcher": {"username": "annthurium@tech.lgbt", "last_k_posts": 3}})
+print(result['llm']['replies'][0])
